@@ -15,6 +15,7 @@
 package rpcmetrics
 
 import (
+	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -73,6 +74,7 @@ type SpanObserver struct {
 	kind              SpanKind
 	httpStatusCode    uint16
 	err               bool
+	options           opentracing.StartSpanOptions
 }
 
 // NewSpanObserver creates a new SpanObserver that can emit RPC metrics.
@@ -85,6 +87,7 @@ func NewSpanObserver(
 		metricsByEndpoint: metricsByEndpoint,
 		operationName:     operationName,
 		startTime:         options.StartTime,
+		options:           options,
 	}
 	for k, v := range options.Tags {
 		so.handleTagInLock(k, v)
@@ -140,6 +143,13 @@ func (so *SpanObserver) OnFinish(options opentracing.FinishOptions) {
 	so.mux.Lock()
 	defer so.mux.Unlock()
 
+	var traceID *string
+	if len(so.options.References) > 0 {
+		r := so.options.References[0]
+		s := fmt.Sprintf("%s", r.ReferencedContext)
+		traceID = &s
+	}
+
 	if so.operationName == "" || so.kind != Inbound {
 		return
 	}
@@ -147,13 +157,13 @@ func (so *SpanObserver) OnFinish(options opentracing.FinishOptions) {
 	mets := so.metricsByEndpoint.get(so.operationName)
 	latency := options.FinishTime.Sub(so.startTime)
 	if so.err {
-		mets.RequestCountFailures.Inc(1)
+		mets.RequestCountFailures.WithTraceID(traceID).Inc(1)
 		mets.RequestLatencyFailures.Record(latency)
 	} else {
-		mets.RequestCountSuccess.Inc(1)
+		mets.RequestCountSuccess.WithTraceID(traceID).Inc(1)
 		mets.RequestLatencySuccess.Record(latency)
 	}
-	mets.recordHTTPStatusCode(so.httpStatusCode)
+	mets.recordHTTPStatusCode(so.httpStatusCode, traceID)
 }
 
 // OnSetOperationName records new operation name.
