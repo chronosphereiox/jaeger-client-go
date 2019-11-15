@@ -143,11 +143,10 @@ func (so *SpanObserver) OnFinish(options opentracing.FinishOptions) {
 	so.mux.Lock()
 	defer so.mux.Unlock()
 
-	var traceID *string
+	var traceID string
 	if len(so.options.References) > 0 {
 		r := so.options.References[0]
-		s := fmt.Sprintf("%s", r.ReferencedContext)
-		traceID = &s
+		traceID = fmt.Sprintf("%s", r.ReferencedContext)
 	}
 
 	if so.operationName == "" || so.kind != Inbound {
@@ -158,10 +157,10 @@ func (so *SpanObserver) OnFinish(options opentracing.FinishOptions) {
 	latency := options.FinishTime.Sub(so.startTime)
 	if so.err {
 		mets.RequestCountFailures.WithTraceID(traceID).Inc(1)
-		mets.RequestLatencyFailures.Record(latency)
+		mets.RequestLatencyFailures.WithTraceID(traceID).Record(latency)
 	} else {
 		mets.RequestCountSuccess.WithTraceID(traceID).Inc(1)
-		mets.RequestLatencySuccess.Record(latency)
+		mets.RequestLatencySuccess.WithTraceID(traceID).Record(latency)
 	}
 	mets.recordHTTPStatusCode(so.httpStatusCode, traceID)
 }
