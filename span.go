@@ -265,7 +265,7 @@ func (s *Span) FinishWithOptions(options opentracing.FinishOptions) {
 	if options.FinishTime.IsZero() {
 		options.FinishTime = s.tracer.timeNow()
 	}
-	s.observer.OnFinish(options)
+	s.observer.OnFinish(s.SpanContext().String(), options)
 	s.Lock()
 	s.duration = options.FinishTime.Sub(s.startTime)
 	s.Unlock()

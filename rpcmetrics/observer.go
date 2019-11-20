@@ -15,7 +15,6 @@
 package rpcmetrics
 
 import (
-	"fmt"
 	"strconv"
 	"sync"
 	"time"
@@ -139,15 +138,9 @@ func (so *SpanObserver) handleTagInLock(key string, value interface{}) {
 
 // OnFinish emits the RPC metrics. It only has an effect when operation name
 // is not blank, and the span kind is an RPC server.
-func (so *SpanObserver) OnFinish(options opentracing.FinishOptions) {
+func (so *SpanObserver) OnFinish(currentSpanID string, options opentracing.FinishOptions) {
 	so.mux.Lock()
 	defer so.mux.Unlock()
-
-	var traceID string
-	if len(so.options.References) > 0 {
-		r := so.options.References[0]
-		traceID = fmt.Sprintf("%s", r.ReferencedContext)
-	}
 
 	if so.operationName == "" || so.kind != Inbound {
 		return
@@ -156,13 +149,13 @@ func (so *SpanObserver) OnFinish(options opentracing.FinishOptions) {
 	mets := so.metricsByEndpoint.get(so.operationName)
 	latency := options.FinishTime.Sub(so.startTime)
 	if so.err {
-		mets.RequestCountFailures.WithTraceID(traceID).Inc(1)
-		mets.RequestLatencyFailures.WithTraceID(traceID).Record(latency)
+		mets.RequestCountFailures.WithTraceID(currentSpanID).Inc(1)
+		mets.RequestLatencyFailures.WithTraceID(currentSpanID).Record(latency)
 	} else {
-		mets.RequestCountSuccess.WithTraceID(traceID).Inc(1)
-		mets.RequestLatencySuccess.WithTraceID(traceID).Record(latency)
+		mets.RequestCountSuccess.WithTraceID(currentSpanID).Inc(1)
+		mets.RequestLatencySuccess.WithTraceID(currentSpanID).Record(latency)
 	}
-	mets.recordHTTPStatusCode(so.httpStatusCode, traceID)
+	mets.recordHTTPStatusCode(so.httpStatusCode, currentSpanID)
 }
 
 // OnSetOperationName records new operation name.

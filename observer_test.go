@@ -104,6 +104,6 @@ func (o *testSpanObserver) OnSetTag(key string, value interface{}) {
 	o.tags[key] = value
 }
 
-func (o *testSpanObserver) OnFinish(options opentracing.FinishOptions) {
+func (o *testSpanObserver) OnFinish(currentSpanID string, options opentracing.FinishOptions) {
 	o.finished = true
 }

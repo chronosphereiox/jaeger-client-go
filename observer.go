@@ -31,7 +31,7 @@ type Observer interface {
 type SpanObserver interface {
 	OnSetOperationName(operationName string)
 	OnSetTag(key string, value interface{})
-	OnFinish(options opentracing.FinishOptions)
+	OnFinish(currentSpanID string, options opentracing.FinishOptions)
 }
 
 // compositeObserver is a dispatcher to other observers
@@ -81,8 +81,8 @@ func (o *compositeSpanObserver) OnSetTag(key string, value interface{}) {
 	}
 }
 
-func (o *compositeSpanObserver) OnFinish(options opentracing.FinishOptions) {
+func (o *compositeSpanObserver) OnFinish(currentSpanID string, options opentracing.FinishOptions) {
 	for _, obs := range o.observers {
-		obs.OnFinish(options)
+		obs.OnFinish(currentSpanID, options)
 	}
 }

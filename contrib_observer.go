@@ -42,7 +42,7 @@ type ContribObserver interface {
 type ContribSpanObserver interface {
 	OnSetOperationName(operationName string)
 	OnSetTag(key string, value interface{})
-	OnFinish(options opentracing.FinishOptions)
+	OnFinish(currentSpanID string, options opentracing.FinishOptions)
 }
 
 // wrapper observer for the old observers (see observer.go)
