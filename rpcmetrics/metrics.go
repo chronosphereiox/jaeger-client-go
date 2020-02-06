@@ -55,13 +55,13 @@ type Metrics struct {
 
 func (m *Metrics) recordHTTPStatusCode(statusCode uint16, traceID string) {
 	if statusCode >= 200 && statusCode < 300 {
-		m.HTTPStatusCode2xx.WithTraceID(traceID).Inc(1)
+		m.HTTPStatusCode2xx.IncWithExemplar(1, traceID)
 	} else if statusCode >= 300 && statusCode < 400 {
-		m.HTTPStatusCode3xx.WithTraceID(traceID).Inc(1)
+		m.HTTPStatusCode3xx.IncWithExemplar(1, traceID)
 	} else if statusCode >= 400 && statusCode < 500 {
-		m.HTTPStatusCode4xx.WithTraceID(traceID).Inc(1)
+		m.HTTPStatusCode4xx.IncWithExemplar(1, traceID)
 	} else if statusCode >= 500 && statusCode < 600 {
-		m.HTTPStatusCode5xx.WithTraceID(traceID).Inc(1)
+		m.HTTPStatusCode5xx.IncWithExemplar(1, traceID)
 	}
 }
 

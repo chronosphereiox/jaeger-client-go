@@ -149,11 +149,11 @@ func (so *SpanObserver) OnFinish(currentSpanID string, options opentracing.Finis
 	mets := so.metricsByEndpoint.get(so.operationName)
 	latency := options.FinishTime.Sub(so.startTime)
 	if so.err {
-		mets.RequestCountFailures.WithTraceID(currentSpanID).Inc(1)
-		mets.RequestLatencyFailures.WithTraceID(currentSpanID).Record(latency)
+		mets.RequestCountFailures.IncWithExemplar(1, currentSpanID)
+		mets.RequestLatencyFailures.RecordWithExemplar(latency, currentSpanID)
 	} else {
-		mets.RequestCountSuccess.WithTraceID(currentSpanID).Inc(1)
-		mets.RequestLatencySuccess.WithTraceID(currentSpanID).Record(latency)
+		mets.RequestCountSuccess.IncWithExemplar(1, currentSpanID)
+		mets.RequestLatencySuccess.RecordWithExemplar(latency, currentSpanID)
 	}
 	mets.recordHTTPStatusCode(so.httpStatusCode, currentSpanID)
 }
